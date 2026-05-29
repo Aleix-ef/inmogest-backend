@@ -5,14 +5,14 @@ namespace Deployer;
 require 'recipe/laravel.php';
 
 set('application', 'inmogest-backend');
-set('repository', getenv('DEPLOY_REPOSITORY') ?: 'git@github.com:TU_USUARIO/inmogest-backend.git');
+set('repository', getenv('DEPLOY_REPOSITORY') ?: 'git@github.com:Aleix-ef/inmogest-backend.git');
 set('keep_releases', 3);
 
 add('shared_files', ['.env']);
 add('shared_dirs', ['storage']);
 add('writable_dirs', ['storage', 'bootstrap/cache']);
 
-host(getenv('DEPLOY_HOST') ?: 'TU_IP_EC2')
+host(getenv('DEPLOY_HOST') ?: 'inmogestsaas.com')
     ->set('remote_user', getenv('DEPLOY_USER') ?: 'ubuntu')
     ->set('identity_file', getenv('DEPLOY_IDENTITY_FILE') ?: '~/.ssh/id_rsa')
     ->set('deploy_path', getenv('DEPLOY_PATH') ?: '/var/www/inmogest-backend');
@@ -31,7 +31,7 @@ task('deploy:artisan_prepare', function () {
 });
 
 task('deploy:restart_services', function () {
-    run('sudo systemctl restart php8.3-fpm || true');
+    run('sudo systemctl restart php8.5-fpm || true');
     run('sudo systemctl restart nginx || true');
 });
 

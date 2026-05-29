@@ -1,0 +1,39 @@
+name: Deploy Laravel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.AWS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy to production
+        run: |
+          ssh "${{ secrets.AWS_USER }}@${{ secrets.AWS_HOST }}" << 'EOF'
+            cd /var/www/inmogest-backend
+            git pull origin main
+            composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+            php artisan config:clear
+            php artisan route:clear
+            php artisan view:clear
+            php artisan cache:clear
+            php artisan migrate --force
+            php artisan storage:link || true
+            sudo chown -R www-data:www-data storage bootstrap/cache
+            sudo chmod -R 775 storage bootstrap/cache
+            sudo systemctl restart php8.5-fpm
+            sudo systemctl reload nginx
+          EOF
